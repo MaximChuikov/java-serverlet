@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/MyFirstServletApp2-master/MyFirstServletApp.iml" filepath="$PROJECT_DIR$/MyFirstServletApp2-master/MyFirstServletApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/java-serverlet.iml" filepath="$PROJECT_DIR$/.idea/java-serverlet.iml" />
+    </modules>
+  </component>
+</project>
