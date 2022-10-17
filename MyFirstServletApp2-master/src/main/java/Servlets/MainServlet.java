@@ -1,25 +1,36 @@
-package org.example;
+package Servlets;
+
+import org.example.Account.UserCookies;
+import org.example.Account.UserProfile;
+import org.example.Account.UserService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.Arrays;
+import javax.servlet.http.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Date;
 
-@WebServlet("/")
+@WebServlet("/main")
 public class MainServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
-        String currentPath = req.getParameter("path");
-        if (currentPath == null || !currentPath.startsWith("D:")) {
-            currentPath = System.getProperty("os.name").toLowerCase().startsWith("win") ? "D:" : "/opt/tomcat/";
-            resp.sendRedirect("?path=" + currentPath);
-        }
-        else {
+        UserProfile user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
+        if (user == null) {
+            resp.sendRedirect("/auth");
+        } else {
+            String currentPath = req.getParameter("path");
+            if (currentPath == null || !currentPath.startsWith("D:/Учеба/java-users/" + user.getLogin())) {
+                currentPath = System.getProperty("os.name").toLowerCase().startsWith("win") ? "D:/Учеба/java-users" : "/opt/tomcat/";
+                currentPath += "/" + user.getLogin();
+                File file = new File(currentPath);
+                if (!file.exists()) {
+                    file.mkdir();
+                }
+            }
             File file = new File(currentPath);
             if (file.isFile()) {
 
@@ -64,10 +75,10 @@ public class MainServlet extends HttpServlet {
             req.setAttribute("currentPath", currentPath);
             req.getRequestDispatcher("FileManager.jsp").forward(req, resp);
         }
-
     }
 
     private void showFiles(HttpServletRequest req, File[] files, String currentPath) {
+        String currentDate = new Date().toString();
         StringBuilder attrFolders = new StringBuilder();
         StringBuilder attrFiles = new StringBuilder();
         for (File file : files) {
@@ -83,16 +94,17 @@ public class MainServlet extends HttpServlet {
                         .append("</a></li>");
             }
         }
+        req.setAttribute("currentTime", currentDate);
         req.setAttribute("folders", attrFolders);
         req.setAttribute("files", attrFiles);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String previousPath = req.getQueryString();
-        String[] splintedPath = previousPath.split("/");
-        String[] newPathArr = Arrays.copyOf(splintedPath, splintedPath.length - 1);
-        String newPath = String.join("/", newPathArr);
-        resp.sendRedirect("?" + newPath);
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (req.getParameter("exitBtn") != null) {
+            UserService.USER_SERVICE.removeUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"));
+            UserCookies.addCookie(resp, "JSESSIONID", null);
+            resp.sendRedirect("/main");
+        }
     }
 }
