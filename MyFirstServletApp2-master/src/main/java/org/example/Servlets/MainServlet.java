@@ -1,4 +1,4 @@
-package Servlets;
+package org.example.Servlets;
 
 import org.example.Account.UserCookies;
 import org.example.Account.UserProfile;
@@ -6,7 +6,6 @@ import org.example.Account.UserService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,17 +13,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 
-@WebServlet("/main")
 public class MainServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         UserProfile user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
         if (user == null) {
-            resp.sendRedirect("/auth");
+            resp.sendRedirect("./auth");
         } else {
             String currentPath = req.getParameter("path");
-            if (currentPath == null || !currentPath.startsWith("D:/Учеба/java-users/" + user.getLogin())) {
-                currentPath = System.getProperty("os.name").toLowerCase().startsWith("win") ? "D:/Учеба/java-users" : "/opt/tomcat/";
+            if (currentPath == null) {
+                currentPath = System.getProperty("os.name").toLowerCase().startsWith("win") ? "D:/Учеба/java-users" : "/home/maxim/projects";
                 currentPath += "/" + user.getLogin();
                 File file = new File(currentPath);
                 if (!file.exists()) {
@@ -104,7 +102,7 @@ public class MainServlet extends HttpServlet {
         if (req.getParameter("exitBtn") != null) {
             UserService.USER_SERVICE.removeUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"));
             UserCookies.addCookie(resp, "JSESSIONID", null);
-            resp.sendRedirect("/main");
+            resp.sendRedirect("./");
         }
     }
 }
