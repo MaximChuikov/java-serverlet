@@ -9,11 +9,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class RegisterServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserProfile user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
+        UserProfile user;
+        try{
+            user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         if (user != null) {
             resp.sendRedirect("./");
             return;
@@ -28,13 +35,22 @@ public class RegisterServlet extends HttpServlet {
         String password = req.getParameter("password");
         String email = req.getParameter("email");
 
-        if (UserService.USER_SERVICE.containsUserByLogin(login) || login == null || password == null || email == null) {
-            return;
+        try {
+            if (UserService.USER_SERVICE.containsUserByLogin(login) || login == null || password == null || email == null) {
+                return;
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
 
-        UserProfile user = new UserProfile(login, password, email);
-        UserService.USER_SERVICE.addUser(user);
-        UserService.USER_SERVICE.addUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"), user);
+        try {
+            UserProfile user = new UserProfile(login, password, email);
+            UserService.USER_SERVICE.addUser(user);
+            UserService.USER_SERVICE.addUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"), user);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         resp.sendRedirect("./");
     }
 }

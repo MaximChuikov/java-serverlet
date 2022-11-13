@@ -11,12 +11,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.util.Date;
 
 public class MainServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserProfile user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
+
+        UserProfile user;
+        try {
+            user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         if (user == null) {
             resp.sendRedirect("./auth");
         } else {
@@ -100,7 +107,11 @@ public class MainServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (req.getParameter("exitBtn") != null) {
-            UserService.USER_SERVICE.removeUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"));
+            try {
+                UserService.USER_SERVICE.removeUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"));
+            } catch (SQLException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             UserCookies.addCookie(resp, "JSESSIONID", null);
             resp.sendRedirect("./");
         }
