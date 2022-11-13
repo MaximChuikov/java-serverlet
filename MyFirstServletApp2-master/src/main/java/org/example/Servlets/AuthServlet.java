@@ -9,17 +9,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 
 public class AuthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        UserProfile user;
-        try {
-            user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        UserProfile user = UserService.USER_SERVICE.getUserByCookies(req.getCookies());
         if (user != null) {
             resp.sendRedirect("./");
             return;
@@ -37,17 +31,13 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        try {
-            UserProfile user = UserService.USER_SERVICE.getUser("login", login);
-            if (user == null || !user.getPassword().equals(password)) {
-                resp.sendRedirect("./auth");
-                return;
-            }
-            UserService.USER_SERVICE.addUserBySession(UserCookies.getValue(req.getCookies(), "JSESSIONID"), user);
-            resp.sendRedirect("./");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        UserProfile user = UserService.USER_SERVICE.getUser(login);
+        if (user == null || !user.getPassword().equals(password)) {
+            resp.sendRedirect("./auth");
+            return;
         }
-
+        UserCookies.addCookie(resp, "login", login);
+        UserCookies.addCookie(resp, "password", password);
+        resp.sendRedirect("./");
     }
 }
